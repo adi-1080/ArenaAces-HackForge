@@ -43,4 +43,4 @@ Team name: Arena Aces
 Team members: 
 Aadit Mehta 
 Dhwaj Jain
-Aaditya Gupta
+Aditya Gupta
