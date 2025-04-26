@@ -6,7 +6,7 @@ DataForge Hackathon at SPIT
 
 Domain: Generative AI
 
-PS6 
+PS5
 Hunter X Hunter
 
 PS:
