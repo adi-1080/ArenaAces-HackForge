@@ -5,6 +5,8 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { generateStory, getStoryProgress } from '../lib/services/storyService';
+import BranchingVisualizer from './BranchingVisualizer';
+import { Chapter } from '../types/branching';
 
 interface StoryGeneratorProps {
   onGenerate?: (storyParams: StoryParams) => void;
@@ -39,6 +41,23 @@ export function StoryGenerator({ onGenerate }: StoryGeneratorProps) {
     additionalDetails: '',
   });
   const [isFormLocked, setIsFormLocked] = useState(false);
+
+  // Transform ChapterInfo to Chapter type for BranchingVisualizer
+  const transformedChapters: Chapter[] = [...previousChapters, currentChapter ? {
+    id: chapterNumber.toString(),
+    title: `Chapter ${chapterNumber}`,
+    content: currentChapter,
+    order: chapterNumber,
+    parentId: (chapterNumber > 1) ? (chapterNumber - 1).toString() : undefined
+  } : []].filter(chapter => chapter !== null).map((chapter, index) => ({
+    id: (index + 1).toString(),
+    title: `Chapter ${index + 1}`,
+    content: typeof chapter === 'string' ? chapter : 
+            'chapter_number' in chapter ? chapter.summary :
+            chapter.content,
+    order: index + 1,
+    parentId: index > 0 ? index.toString() : undefined
+  }));
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -266,19 +285,43 @@ export function StoryGenerator({ onGenerate }: StoryGeneratorProps) {
       )}
 
       {currentChapter && (
-        <Card className="w-full max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Chapter {chapterNumber}</CardTitle>
-            <CardDescription>
-              {totalChapters > 1 ? `Part ${chapterNumber} of your story` : 'The beginning of your story'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="prose">
-              <p>{currentChapter}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <Card className="w-full max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Chapter {chapterNumber}</CardTitle>
+              <CardDescription>
+                {totalChapters > 1 ? `Part ${chapterNumber} of your story` : 'The beginning of your story'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="prose">
+                <p>{currentChapter}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Add BranchingVisualizer after the current chapter */}
+          <Card className="w-full mx-auto mt-8">
+            <CardHeader>
+              <CardTitle>Story Branches</CardTitle>
+              <CardDescription>
+                Explore alternative story paths and branches
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[600px]">
+              {storyId && transformedChapters.length > 0 && (
+                <BranchingVisualizer
+                  storyId={storyId}
+                  chapters={transformedChapters}
+                  onBranchSelect={(branch) => {
+                    console.log('Selected branch:', branch);
+                    // TODO: Implement branch selection handling
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );

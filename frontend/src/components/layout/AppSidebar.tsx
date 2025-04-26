@@ -1,4 +1,3 @@
-
 import { 
   Sidebar, 
   SidebarContent, 
@@ -49,10 +48,8 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-story-purple" />
-          <h1 className="text-xl font-semibold text-story-purple">
-            StoryCompanion
-          </h1>
+          <Pen className="h-6 w-6" />
+          <span className="font-semibold">FableForge</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -83,7 +80,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-4">
         <div className="text-xs text-muted-foreground">
-          StoryCompanion v0.1.0
+          FableForge v0.1.0
         </div>
       </SidebarFooter>
     </Sidebar>

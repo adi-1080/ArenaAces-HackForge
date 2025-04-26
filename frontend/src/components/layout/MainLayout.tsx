@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
@@ -16,7 +15,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex items-center p-4 border-b">
             <SidebarTrigger />
             <div className="ml-4">
-              <h1 className="text-xl font-semibold">StoryCompanion</h1>
+              <h1 className="text-xl font-semibold">FableForge</h1>
             </div>
           </div>
           <div className="p-6">

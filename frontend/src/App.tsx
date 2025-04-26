@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import { StoryGenerator } from './components/StoryGenerator';
-import PlotAnalysis from "./pages/PlotAnalysis";
+import { PlotAnalysis } from './components/PlotAnalysis';
 import WritingAssistant from "./pages/WritingAssistant";
 import Collaboration from "./pages/Collaboration";
 import NotFound from "./pages/NotFound";
