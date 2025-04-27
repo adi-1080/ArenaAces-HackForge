@@ -1,10 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional, List, Literal
 from ai_assistant import StoryAIAssistant
 import uuid
+import speech_recognition as sr
+import os
+from pydub import AudioSegment
 
 app = FastAPI()
 
@@ -214,6 +217,117 @@ async def validate_branch(story_id: str, branch_id: str):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+async def convert_to_wav(input_file: str, output_file: str):
+    """Convert audio file to WAV format."""
+    audio = AudioSegment.from_file(input_file)
+    audio.export(output_file, format="wav")
+
+@app.post("/api/speech-to-text")
+async def speech_to_text(file: UploadFile = File(...)):
+    try:
+        # Get file extension
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        temp_input = f"temp_input{file_ext}"
+        temp_wav = "temp_audio.wav"
+        
+        # Save uploaded file
+        audio_content = await file.read()
+        with open(temp_input, "wb") as f:
+            f.write(audio_content)
+
+        # Convert to WAV if not already WAV
+        if file_ext != '.wav':
+            await convert_to_wav(temp_input, temp_wav)
+            os.remove(temp_input)  # Clean up input file
+        else:
+            temp_wav = temp_input
+
+        # Process audio
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(temp_wav) as source:
+            audio_data = recognizer.record(source)
+
+            try:
+                text = recognizer.recognize_google(audio_data, language="en-US")
+            except sr.UnknownValueError:
+                raise HTTPException(status_code=400, detail="Could not understand audio.")
+            except sr.RequestError as e:
+                raise HTTPException(status_code=503, detail=f"Google Speech Recognition service error: {e}")
+
+        # Clean up
+        os.remove(temp_wav)
+        return {"text": text}
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Speech recognition error: {str(e)}"}
+        )
+
+@app.post("/api/speech-story-input", response_model=StoryResponse)
+async def speech_story_input(
+    file: UploadFile = File(...), 
+    story_id: Optional[str] = None,
+    genre: Optional[str] = None,
+    tone: Optional[str] = None
+):
+    try:
+        # Get file extension
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        temp_input = f"temp_input{file_ext}"
+        temp_wav = "temp_audio.wav"
+        
+        # Save uploaded file
+        audio_content = await file.read()
+        with open(temp_input, "wb") as f:
+            f.write(audio_content)
+
+        # Convert to WAV if not already WAV
+        if file_ext != '.wav':
+            await convert_to_wav(temp_input, temp_wav)
+            os.remove(temp_input)  # Clean up input file
+        else:
+            temp_wav = temp_input
+
+        # Process audio
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(temp_wav) as source:
+            audio_data = recognizer.record(source)
+
+            try:
+                text = recognizer.recognize_google(audio_data, language="en-US")
+            except sr.UnknownValueError:
+                raise HTTPException(status_code=400, detail="Could not understand audio.")
+            except sr.RequestError as e:
+                raise HTTPException(status_code=503, detail=f"Google Speech Recognition service error: {e}")
+
+        # Clean up
+        os.remove(temp_wav)
+
+        # Very basic splitting
+        lines = text.split('.')
+        story_elements = {
+            "mainCharacter": lines[0] if len(lines) > 0 else "Unknown hero",
+            "setting": lines[1] if len(lines) > 1 else "Mysterious world",
+            "genre": genre or "fantasy",
+            "tone": tone or "adventurous",
+            "additionalDetails": text,
+            "story_id": story_id
+        }
+
+        request = StoryRequest(**story_elements)
+        return await generate_story(request)
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Speech story input error: {str(e)}"}
+        )
 
 if __name__ == "__main__":
     import uvicorn

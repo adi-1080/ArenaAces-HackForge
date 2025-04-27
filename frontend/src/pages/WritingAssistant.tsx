@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 
 interface Message {
   id: number;
@@ -29,6 +29,16 @@ const WritingAssistant = () => {
       timestamp: new Date(),
     },
   ]);
+  
+  const handleTranscription = (text: string) => {
+    const currentContent = writingContent;
+    const newContent = currentContent ? `${currentContent}\n${text}` : text;
+    setWritingContent(newContent);
+    toast({
+      title: "Voice Transcribed",
+      description: "Your voice has been converted to text and added to the writing area.",
+    });
+  };
   
   const handleSendMessage = () => {
     if (!userInput.trim()) return;
@@ -89,10 +99,11 @@ const WritingAssistant = () => {
                 <Pen className="h-4 w-4 text-story-purple mr-2" />
                 <h2 className="font-medium">Writing Area</h2>
               </div>
-              <div>
+              <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs bg-story-blue/10">
                   Draft
                 </Badge>
+                <VoiceRecorder onTranscription={handleTranscription} />
               </div>
             </div>
             
